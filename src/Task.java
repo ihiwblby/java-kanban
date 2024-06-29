@@ -5,13 +5,11 @@ public class Task {
     protected String description;
     protected int id;
     protected Status status;
-    protected static int idCounter = 0;
 
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
         this.status = Status.NEW;
-        this.id = idCounter++;
     }
 
     public String getName() {
@@ -32,6 +30,10 @@ public class Task {
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Status getStatus() {
