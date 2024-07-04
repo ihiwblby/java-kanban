@@ -1,6 +1,10 @@
+package model;
+
+import manager.Status;
+
 import java.util.Objects;
 
-public class Task {
+public class Task implements Cloneable {
     protected String name;
     protected String description;
     protected int id;
@@ -45,6 +49,15 @@ public class Task {
     }
 
     @Override
+    public Task clone() {
+        try {
+            return (Task) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Clone not supported for Task", e);
+        }
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || this.getClass() != obj.getClass()) return false;
@@ -59,7 +72,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
+        return "model.Task{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +

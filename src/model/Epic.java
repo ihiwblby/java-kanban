@@ -1,7 +1,9 @@
+package model;
+
 import java.util.ArrayList;
 
 public class Epic extends Task {
-    private final ArrayList<Integer> subtasksIds;
+    private ArrayList<Integer> subtasksIds;
 
     public Epic(String name, String description) {
         super(name, description);
@@ -13,7 +15,11 @@ public class Epic extends Task {
     }
 
     public void addSubtaskId(int subtasksId) {
-        subtasksIds.add(subtasksId);
+        if (getId() == subtasksId) {
+            System.out.println("Эпик нельзя добавить в самого себя в качестве подзадачи.");
+        } else {
+            subtasksIds.add(subtasksId);
+        }
     }
 
     public void removeSubtaskById(Integer subtaskId) {
@@ -25,8 +31,15 @@ public class Epic extends Task {
     }
 
     @Override
+    public Epic clone() {
+        Epic cloned = (Epic) super.clone();
+        cloned.subtasksIds = new ArrayList<>(this.subtasksIds);
+        return cloned;
+    }
+
+    @Override
     public String toString() {
-        return "Epic{" +
+        return "model.Epic{" +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +
