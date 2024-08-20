@@ -1,23 +1,91 @@
 package manager;
 
 import model.Task;
+import utility.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final List<Task> history = new ArrayList<>();
+    private final HashMap<Integer, Node> history = new HashMap<>();
 
-    @Override
-    public List<Task> getHistory() {
-        return history;
+    private Node head;
+    private Node tail;
+
+    public Node linkLast(Task data) {
+        final Node oldTail = tail;
+        final Node newTail = new Node(oldTail, data, null);
+        tail = newTail;
+        if (oldTail == null) {
+            head = newTail;
+        } else {
+            oldTail.setNext(newTail);
+        }
+        return tail;
+    }
+
+    public ArrayList<Task> getTasks() {
+        final ArrayList<Task> tasks = new ArrayList<>();
+        Node node = head;
+        while (node != null) {
+            tasks.add(node.getData());
+            node = node.getNext();
+        }
+        return tasks;
+    }
+
+    public void removeNode(Node node) {
+        if (node == null) return;
+
+        Node prevNode = node.getPrev();
+        Node nextNode = node.getNext();
+
+        if (prevNode == null) {
+            head = nextNode;
+            if (nextNode != null) {
+                nextNode.setPrev(null);
+            }
+        } else {
+            prevNode.setNext(nextNode);
+        }
+
+        if (nextNode == null) {
+            tail = prevNode;
+            if (prevNode != null) {
+                prevNode.setNext(null);
+            }
+        } else {
+            nextNode.setPrev(prevNode);
+        }
     }
 
     @Override
     public void add(Task task) {
-        if (history.size() >= 10) {
-            history.remove(0);
+        if (task == null) {
+            System.out.println("Невозможно добавить пустую задачу");
+            return;
         }
-        history.add(task);
+        int taskId = task.getId();
+
+        if (history.containsKey(taskId)) {
+            remove(taskId);
+        }
+        history.put(taskId, linkLast(task));
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return getTasks();
+    }
+
+    @Override
+    public void remove(int id) {
+        Node node = history.get(id);
+        if (node == null) {
+            System.out.println("По данному ID не сущетсвует задачи");
+            return;
+        }
+        removeNode(node);
     }
 }

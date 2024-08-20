@@ -9,8 +9,10 @@ import model.Task;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import utility.Status;
 
 import java.util.ArrayList;
+import java.util.List;
 
 class InMemoryTaskManagerTest {
     TaskManager taskManager;
@@ -91,5 +93,103 @@ class InMemoryTaskManagerTest {
         Assertions.assertEquals(task.getDescription(), checkedTask.getDescription());
         Assertions.assertEquals(task.getId(), checkedTask.getId());
         Assertions.assertEquals(task.getStatus(), checkedTask.getStatus());
+    }
+
+    @Test
+    public void shouldRemoveSubtaskFromEpic() {
+        Epic epic = new Epic("Epic 1", "Epic description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask = new Subtask("Subtask 1", "Subtask description", epic.getId());
+        taskManager.createSubtask(subtask);
+
+        taskManager.removeSubtaskById(subtask.getId());
+
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
+        Assertions.assertTrue(updatedEpic.getSubtasksIds().isEmpty(), "Список подзадач эпика должен быть пустым.");
+    }
+
+    @Test
+    public void shouldUpdateEpicStatusBasedOnSubtasks() {
+        Epic epic = new Epic("Epic 1", "Epic description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Subtask description", epic.getId());
+        taskManager.createSubtask(subtask1);
+        Subtask subtask2 = new Subtask("Subtask 2", "Subtask description", epic.getId());
+        taskManager.createSubtask(subtask2);
+
+        subtask1.setStatus(Status.DONE);
+        taskManager.updateSubtask(subtask1);
+
+        Epic updatedEpic = taskManager.getEpicById(epic.getId());
+        Assertions.assertEquals(Status.IN_PROGRESS, updatedEpic.getStatus(), "Статус эпика должен быть 'IN_PROGRESS'.");
+
+        subtask2.setStatus(Status.DONE);
+        taskManager.updateSubtask(subtask2);
+
+        updatedEpic = taskManager.getEpicById(epic.getId());
+        Assertions.assertEquals(Status.DONE, updatedEpic.getStatus(), "Статус эпика должен быть 'DONE'.");
+    }
+
+    @Test
+    public void shouldReflectChangesInTaskAfterSettingNewValues() {
+        Task task = new Task("Task 1", "Task description");
+        taskManager.createTask(task);
+
+        task.setName("Updated Task");
+        task.setDescription("Updated description");
+        taskManager.updateTask(task);
+
+        Task updatedTask = taskManager.getTaskById(task.getId());
+        Assertions.assertEquals("Updated Task", updatedTask.getName());
+        Assertions.assertEquals("Updated description", updatedTask.getDescription());
+    }
+
+    @Test
+    public void shouldRemoveTaskFromHistoryAfterDeletion() {
+        Task task = new Task("Task 1", "Task description");
+        taskManager.createTask(task);
+        int taskId = task.getId();
+
+        taskManager.getTaskById(taskId);
+        taskManager.removeTaskById(taskId);
+
+        List<Task> history = taskManager.getHistory();
+        Assertions.assertFalse(history.contains(task), "Задача не должна оставаться в истории после удаления.");
+    }
+
+    @Test
+    public void shouldNotRetainSubtaskIdAfterDeletion() {
+        Epic epic = new Epic("Epic 1", "Epic Description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask = new Subtask("Subtask 1", "Subtask Description", epic.getId());
+        taskManager.createSubtask(subtask);
+
+        Assertions.assertNotNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача должна существовать после создания.");
+
+        taskManager.removeSubtaskById(subtask.getId());
+
+        Assertions.assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача не должна существовать после удаления.");
+    }
+
+    @Test
+    public void shouldNotRetainNonExistentSubtaskIdsInEpic() {
+        Epic epic = new Epic("Epic 1", "Epic Description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Subtask Description 1", epic.getId());
+        taskManager.createSubtask(subtask1);
+        Subtask subtask2 = new Subtask("Subtask 2", "Subtask Description 2", epic.getId());
+        taskManager.createSubtask(subtask2);
+
+        Assertions.assertTrue(epic.getSubtasksIds().contains(subtask1.getId()), "ID первой подзадачи должен быть в списке ID эпика.");
+        Assertions.assertTrue(epic.getSubtasksIds().contains(subtask2.getId()), "ID второй подзадачи должен быть в списке ID эпика.");
+
+        taskManager.removeSubtaskById(subtask1.getId());
+
+        Assertions.assertFalse(epic.getSubtasksIds().contains(subtask1.getId()), "ID удаленной подзадачи не должен присутствовать в списке подзадач эпика.");
+        Assertions.assertTrue(epic.getSubtasksIds().contains(subtask2.getId()), "ID второй подзадачи все еще должен быть в списке подзадач эпика.");
     }
 }

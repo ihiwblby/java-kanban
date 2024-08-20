@@ -3,6 +3,7 @@ package manager;
 import model.Epic;
 import model.Subtask;
 import model.Task;
+import utility.Status;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,17 +33,29 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeAllTasks() {
+        for (Task task : tasks.values()) {
+            historyManager.remove(task.getId());
+        }
         tasks.clear();
     }
 
     @Override
     public void removeAllEpics() {
+        for (Epic epic : epics.values()) {
+            historyManager.remove(epic.getId());
+        }
         epics.clear();
+        for (Subtask subtask : subtasks.values()) {
+            historyManager.remove(subtask.getId());
+        }
         subtasks.clear();
     }
 
     @Override
     public void removeAllSubtasks() {
+        for (Subtask subtask : subtasks.values()) {
+            historyManager.remove(subtask.getId());
+        }
         subtasks.clear();
         for (Epic epic : epics.values()) {
             epic.removeAllSubtasks();
@@ -131,6 +144,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeTaskById(int id) {
         if (tasks.containsKey(id)) {
             tasks.remove(id);
+            historyManager.remove(id);
         } else {
             System.out.println("Задача с ID " + id + " не найдена.");
         }
@@ -143,8 +157,10 @@ public class InMemoryTaskManager implements TaskManager {
             final ArrayList<Integer> subtasksIds = epic.getSubtasksIds();
             for (Integer subtasksId : subtasksIds) {
                 subtasks.remove(subtasksId);
+                historyManager.remove(subtasksId);
             }
             epics.remove(id);
+            historyManager.remove(id);
         } else {
             System.out.println("Эпик с ID " + id + " не найден.");
         }
@@ -159,6 +175,7 @@ public class InMemoryTaskManager implements TaskManager {
             epic.removeSubtaskById(id);
             subtasks.remove(id);
             updateEpicStatus(epicId);
+            historyManager.remove(id);
         } else {
             System.out.println("Подзадача с ID " + id + " не найдена.");
         }
