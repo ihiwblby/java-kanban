@@ -13,53 +13,6 @@ public class InMemoryHistoryManager implements HistoryManager {
     private Node head;
     private Node tail;
 
-    public Node linkLast(Task data) {
-        final Node oldTail = tail;
-        final Node newTail = new Node(oldTail, data, null);
-        tail = newTail;
-        if (oldTail == null) {
-            head = newTail;
-        } else {
-            oldTail.setNext(newTail);
-        }
-        return tail;
-    }
-
-    public ArrayList<Task> getTasks() {
-        final ArrayList<Task> tasks = new ArrayList<>();
-        Node node = head;
-        while (node != null) {
-            tasks.add(node.getData());
-            node = node.getNext();
-        }
-        return tasks;
-    }
-
-    public void removeNode(Node node) {
-        if (node == null) return;
-
-        Node prevNode = node.getPrev();
-        Node nextNode = node.getNext();
-
-        if (prevNode == null) {
-            head = nextNode;
-            if (nextNode != null) {
-                nextNode.setPrev(null);
-            }
-        } else {
-            prevNode.setNext(nextNode);
-        }
-
-        if (nextNode == null) {
-            tail = prevNode;
-            if (prevNode != null) {
-                prevNode.setNext(null);
-            }
-        } else {
-            nextNode.setPrev(prevNode);
-        }
-    }
-
     @Override
     public void add(Task task) {
         if (task == null) {
@@ -87,5 +40,53 @@ public class InMemoryHistoryManager implements HistoryManager {
             return;
         }
         removeNode(node);
+        history.remove(id);
+    }
+
+    private Node linkLast(Task data) {
+        final Node oldTail = tail;
+        final Node newTail = new Node(oldTail, data, null);
+        tail = newTail;
+        if (oldTail == null) {
+            head = newTail;
+        } else {
+            oldTail.setNext(newTail);
+        }
+        return tail;
+    }
+
+    private ArrayList<Task> getTasks() {
+        final ArrayList<Task> tasks = new ArrayList<>();
+        Node node = head;
+        while (node != null) {
+            tasks.add(node.getData());
+            node = node.getNext();
+        }
+        return tasks;
+    }
+
+    private void removeNode(Node node) {
+        if (node == null) return;
+
+        Node prevNode = node.getPrev();
+        Node nextNode = node.getNext();
+
+        if (prevNode == null) {
+            head = nextNode;
+            if (nextNode != null) {
+                nextNode.setPrev(null);
+            }
+        } else {
+            prevNode.setNext(nextNode);
+        }
+
+        if (nextNode == null) {
+            tail = prevNode;
+            if (prevNode != null) {
+                prevNode.setNext(null);
+            }
+        } else {
+            nextNode.setPrev(prevNode);
+        }
     }
 }
