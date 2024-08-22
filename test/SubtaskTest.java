@@ -1,5 +1,3 @@
-package test;
-
 import model.Subtask;
 
 import org.junit.jupiter.api.Assertions;
