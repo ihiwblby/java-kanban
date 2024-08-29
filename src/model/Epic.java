@@ -1,5 +1,7 @@
 package model;
 
+import utility.TaskType;
+
 import java.util.ArrayList;
 
 public class Epic extends Task {
@@ -31,6 +33,11 @@ public class Epic extends Task {
     }
 
     @Override
+    public TaskType getType() {
+        return TaskType.EPIC;
+    }
+
+    @Override
     public Epic clone() {
         Epic cloned = (Epic) super.clone();
         cloned.subtasksIds = new ArrayList<>(this.subtasksIds);
@@ -40,6 +47,7 @@ public class Epic extends Task {
     @Override
     public String toString() {
         return "model.Epic{" +
+                ", type=" + getType() +
                 "name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +

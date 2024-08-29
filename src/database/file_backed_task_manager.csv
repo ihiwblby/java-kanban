@@ -1,0 +1,11 @@
+id,type,name,status,description,epic
+16,TASK,Task 2,NEW,Description of Task 2
+2,TASK,Task 2,NEW,Description of Task 2
+23,TASK,Task 2,NEW,Description of Task 2
+9,TASK,Task 2,NEW,Description of Task 2
+30,TASK,Task 2,NEW,Description of Task 2
+35,EPIC,Epic 2,NEW,Epic without subtasks
+21,EPIC,Epic 2,NEW,Epic without subtasks
+7,EPIC,Epic 2,NEW,Epic without subtasks
+28,EPIC,Epic 2,NEW,Epic without subtasks
+14,EPIC,Epic 2,NEW,Epic without subtasks
