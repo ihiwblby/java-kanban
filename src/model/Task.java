@@ -86,7 +86,7 @@ public class Task implements Cloneable {
                 '}';
     }
 
-    public String toStringForFile () {
+    public String toStringForFile() {
         String[] string = {
                 Integer.toString(getId()),
                 getType().toString(),
