@@ -78,8 +78,8 @@ public class Task implements Cloneable {
     @Override
     public String toString() {
         return "model.Task{" +
-                ", type=" + getType() +
-                "name='" + name + '\'' +
+                "type=" + getType() +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +
                 ", status=" + status +
