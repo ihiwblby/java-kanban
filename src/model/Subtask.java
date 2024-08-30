@@ -1,5 +1,7 @@
 package model;
 
+import utility.TaskType;
+
 public class Subtask extends Task {
     private int myEpicId;
 
@@ -21,6 +23,11 @@ public class Subtask extends Task {
     }
 
     @Override
+    public TaskType getType() {
+        return TaskType.SUBTASK;
+    }
+
+    @Override
     public Subtask clone() {
         return (Subtask) super.clone();
     }
@@ -28,11 +35,25 @@ public class Subtask extends Task {
     @Override
     public String toString() {
         return "model.Subtask{" +
-                "name='" + name + '\'' +
+                "type=" + getType() +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +
                 ", status=" + status +
                 ", myEpicId=" + myEpicId +
                 '}';
+    }
+
+    @Override
+    public String toStringForFile() {
+        String[] string = {
+                Integer.toString(getId()),
+                getType().toString(),
+                getName(),
+                getStatus().toString(),
+                getDescription(),
+                Integer.toString(getMyEpicId())
+        };
+        return String.join(",", string);
     }
 }

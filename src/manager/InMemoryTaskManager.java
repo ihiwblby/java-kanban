@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final HashMap<Integer, Task> tasks = new HashMap<>();
-    private final HashMap<Integer, Epic> epics = new HashMap<>();
-    private final HashMap<Integer, Subtask> subtasks = new HashMap<>();
-    private int idCounter = 0;
-    private final HistoryManager historyManager = Managers.getDefaultHistory();
+    protected final HashMap<Integer, Task> tasks = new HashMap<>();
+    protected final HashMap<Integer, Epic> epics = new HashMap<>();
+    protected final HashMap<Integer, Subtask> subtasks = new HashMap<>();
+    protected int idCounter = 0;
+    protected final HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public ArrayList<Task> getAllTasks() {
@@ -86,18 +86,31 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void createTask(Task task) {
+        if (isTaskExists(task.getName(), task.getDescription())) {
+            System.out.println("Задача с таким названием и описанием уже существует.");
+            return;
+        }
         task.setId(idCounter++);
         tasks.put(task.getId(), task);
     }
 
     @Override
     public void createEpic(Epic epic) {
+        if (isTaskExists(epic.getName(), epic.getDescription())) {
+            System.out.println("Эпик с таким названием и описанием уже существует.");
+            return;
+        }
         epic.setId(idCounter++);
         epics.put(epic.getId(), epic);
     }
 
     @Override
     public void createSubtask(Subtask subtask) {
+        if (isTaskExists(subtask.getName(), subtask.getDescription())) {
+            System.out.println("Подзадача с таким названием и описанием уже существует.");
+            return;
+        }
+
         if (epics.containsKey(subtask.getMyEpicId())) {
             subtask.setId(idCounter++);
             subtasks.put(subtask.getId(), subtask);
@@ -223,5 +236,24 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    public boolean isTaskExists(String name, String description) {
+        for (Task task : tasks.values()) {
+            if (task.getName().equals(name) && task.getDescription().equals(description)) {
+                return true;
+            }
+        }
+        for (Epic epic : epics.values()) {
+            if (epic.getName().equals(name) && epic.getDescription().equals(description)) {
+                return true;
+            }
+        }
+        for (Subtask subtask : subtasks.values()) {
+            if (subtask.getName().equals(name) && subtask.getDescription().equals(description)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

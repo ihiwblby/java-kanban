@@ -1,6 +1,7 @@
 package model;
 
 import utility.Status;
+import utility.TaskType;
 
 import java.util.Objects;
 
@@ -48,6 +49,10 @@ public class Task implements Cloneable {
         this.status = status;
     }
 
+    public TaskType getType() {
+        return TaskType.TASK;
+    }
+
     @Override
     public Task clone() {
         try {
@@ -73,10 +78,22 @@ public class Task implements Cloneable {
     @Override
     public String toString() {
         return "model.Task{" +
-                "name='" + name + '\'' +
+                "type=" + getType() +
+                ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", id=" + id +
                 ", status=" + status +
                 '}';
+    }
+
+    public String toStringForFile() {
+        String[] string = {
+                Integer.toString(getId()),
+                getType().toString(),
+                getName(),
+                getStatus().toString(),
+                getDescription()
+        };
+        return String.join(",", string);
     }
 }

@@ -4,10 +4,12 @@ import model.Epic;
 import model.Subtask;
 import model.Task;
 
+import java.io.File;
+
 public class Main {
 
     public static void main(String[] args) {
-        TaskManager taskManager = Managers.getDefault();
+        TaskManager taskManager = Managers.getDefault(new File("./src/database/file_backed_task_manager.csv"));
 
         // 1. Создайте две задачи, эпик с тремя подзадачами и эпик без подзадач.
         Task task1 = new Task("Task 1", "Description of Task 1");

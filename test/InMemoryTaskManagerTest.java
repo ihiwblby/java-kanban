@@ -38,7 +38,7 @@ class InMemoryTaskManagerTest {
         Epic epic = new Epic("name", "description");
         taskManager.createEpic(epic);
 
-        Subtask subtask = new Subtask("name", "description", epic.getId());
+        Subtask subtask = new Subtask("name1", "description1", epic.getId());
         taskManager.createSubtask(subtask);
         subtask.setMyEpicId(subtask.getId());
 
@@ -53,7 +53,7 @@ class InMemoryTaskManagerTest {
         givenIdTask.setId(10);
         taskManager.createTask(givenIdTask);
 
-        Task generatedIdTask = new Task("name", "description");
+        Task generatedIdTask = new Task("name1", "description1");
         taskManager.createTask(generatedIdTask);
 
         Assertions.assertNotEquals(givenIdTask.getId(), generatedIdTask.getId());
@@ -65,9 +65,9 @@ class InMemoryTaskManagerTest {
     public void shouldAddAndFindTasksEpicsAndSubtasksById() {
         Task task = new Task("name", "description");
         taskManager.createTask(task);
-        Epic epic = new Epic("name", "description");
+        Epic epic = new Epic("name1", "description1");
         taskManager.createEpic(epic);
-        Subtask subtask = new Subtask("name", "description", epic.getId());
+        Subtask subtask = new Subtask("name2", "description2", epic.getId());
         taskManager.createSubtask(subtask);
 
         Task foundTask = taskManager.getTaskById(task.getId());
