@@ -13,20 +13,6 @@ public class Task implements Cloneable {
     protected int id;
     protected Status status;
     protected Duration duration;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Task task = (Task) o;
-        return id == task.id && Objects.equals(name, task.name) && Objects.equals(description, task.description) && status == task.status && Objects.equals(duration, task.duration) && Objects.equals(startTime, task.startTime);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, description, id, status, duration, startTime);
-    }
-
     protected LocalDateTime startTime;
 
     public Task(String name, String description) {
@@ -101,6 +87,19 @@ public class Task implements Cloneable {
         } else {
             return LocalDateTime.MIN;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return id == task.id && Objects.equals(duration, task.duration) && Objects.equals(startTime, task.startTime);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, duration, startTime);
     }
 
     @Override
