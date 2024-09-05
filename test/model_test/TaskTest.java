@@ -1,3 +1,5 @@
+package model_test;
+
 import model.Task;
 
 import org.junit.jupiter.api.Assertions;

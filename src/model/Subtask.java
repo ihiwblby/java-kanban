@@ -2,11 +2,19 @@ package model;
 
 import utility.TaskType;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     private int myEpicId;
 
     public Subtask(String name, String description, int myEpicId) {
         super(name, description);
+        this.myEpicId = myEpicId;
+    }
+
+    public Subtask(String name, String description, int myEpicId, Duration duration, LocalDateTime startTime) {
+        super(name, description, duration, startTime);
         this.myEpicId = myEpicId;
     }
 
@@ -38,9 +46,12 @@ public class Subtask extends Task {
                 "type=" + getType() +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
-                ", id=" + id +
-                ", status=" + status +
-                ", myEpicId=" + myEpicId +
+                ", id=" + id + '\'' +
+                ", status=" + status + '\'' +
+                ", myEpicId=" + myEpicId + '\'' +
+                ", duration=" + duration + '\'' +
+                ", startTime=" + startTime + '\'' +
+                ", endTime=" + getEndTime() +
                 '}';
     }
 
@@ -52,7 +63,9 @@ public class Subtask extends Task {
                 getName(),
                 getStatus().toString(),
                 getDescription(),
-                Integer.toString(getMyEpicId())
+                Integer.toString(getMyEpicId()),
+                Long.toString(getDuration().toMinutes()),
+                getStartTime().toString()
         };
         return String.join(",", string);
     }

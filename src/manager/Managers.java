@@ -8,7 +8,7 @@ public class Managers {
         return FileBackedTaskManager.loadFromFile(file);
     }
 
-    public static TaskManager getDefault() {
+    public static InMemoryTaskManager getDefault() {
         return new InMemoryTaskManager();
     }
 

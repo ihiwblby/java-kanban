@@ -1,9 +1,12 @@
+package manager_test;
+
+import manager.InMemoryTaskManager;
 import manager.Managers;
 import manager.TaskManager;
+
 import model.Epic;
 import model.Subtask;
 import model.Task;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,15 +15,16 @@ import utility.Status;
 import java.util.ArrayList;
 import java.util.List;
 
-class InMemoryTaskManagerTest {
-    TaskManager taskManager;
+
+public abstract class TaskManagerTest<T extends TaskManager> {
+
+    protected InMemoryTaskManager taskManager;
 
     @BeforeEach
     public void beforeEach() {
         taskManager = Managers.getDefault();
     }
 
-    // Проверяем, что эпик не добавляется в самого себя в виде подзадачи;
     @Test
     public void shouldNotAllowEpicToAddItselfAsSubtask() {
         Epic epic = new Epic("name", "description");
@@ -32,7 +36,6 @@ class InMemoryTaskManagerTest {
         Assertions.assertFalse(subtasksIds.contains(epic.getId()));
     }
 
-    // Проверяем, что сабтаск не может быть своим же эпиком
     @Test
     public void shouldNotAllowSubtaskToHaveItselfAsEpic() {
         Epic epic = new Epic("name", "description");
@@ -46,7 +49,6 @@ class InMemoryTaskManagerTest {
                 "Сабтаск не должен быть своим эпиком");
     }
 
-    // Проверяем, что задачи с заданным ID и сгенерированным ID не конфликтуют внутри менеджера
     @Test
     public void shouldNotConflictTasksWithGivenAndGeneratedIds() {
         Task givenIdTask = new Task("name", "description");
@@ -60,7 +62,6 @@ class InMemoryTaskManagerTest {
         Assertions.assertEquals(2, taskManager.getAllTasks().size());
     }
 
-    // Проверяем, что задачи разного типа действительно добавляются в TaskManager и могут быть найдены по ID
     @Test
     public void shouldAddAndFindTasksEpicsAndSubtasksById() {
         Task task = new Task("name", "description");
@@ -79,7 +80,6 @@ class InMemoryTaskManagerTest {
         Assertions.assertEquals(subtask, foundSubtask);
     }
 
-    // Проверяем неизменность задачи (по всем полям) при добавлении задачи в менеджер
     @Test
     public void shouldStayUnchangeableAfterAddingToTaskManager() {
         Task task = new Task("name", "description");
@@ -189,5 +189,18 @@ class InMemoryTaskManagerTest {
 
         Assertions.assertFalse(epic.getSubtasksIds().contains(subtask1.getId()), "ID удаленной подзадачи не должен присутствовать в списке подзадач эпика.");
         Assertions.assertTrue(epic.getSubtasksIds().contains(subtask2.getId()), "ID второй подзадачи все еще должен быть в списке подзадач эпика.");
+    }
+
+    @Test
+    public void subtaskShouldHaveEpic() {
+        Epic epic = new Epic("Epic 1", "Epic Description");
+        taskManager.createEpic(epic);
+
+        Subtask subtask1 = new Subtask("Subtask 1", "Subtask Description 1", epic.getId());
+        taskManager.createSubtask(subtask1);
+
+        Epic checkedEpic = taskManager.getEpicById(subtask1.getMyEpicId());
+        Assertions.assertEquals("Epic 1", checkedEpic.getName());
+        Assertions.assertEquals("Epic Description", checkedEpic.getDescription());
     }
 }
