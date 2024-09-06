@@ -48,7 +48,10 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeAllEpics() {
         epics.values().forEach(epic -> historyManager.remove(epic.getId()));
         epics.clear();
-        subtasks.values().forEach(subtask -> historyManager.remove(subtask.getId()));
+        subtasks.values().forEach(subtask -> {
+            historyManager.remove(subtask.getId());
+            prioritizedTasks.remove(subtask);
+        });
         subtasks.clear();
     }
 
@@ -288,22 +291,21 @@ public class InMemoryTaskManager implements TaskManager {
 
         LocalDateTime startTime = subtaskIds.stream()
                 .map(subtasks::get)
-                .filter(subtask -> subtask.getStartTime() != null)
-                .min(taskComparator)
                 .map(Task::getStartTime)
+                .filter(time -> !time.equals(LocalDateTime.MIN))
+                .min(LocalDateTime::compareTo)
                 .orElse(LocalDateTime.MIN);
 
         LocalDateTime endTime = subtaskIds.stream()
                 .map(subtasks::get)
                 .map(Task::getEndTime)
-                .filter(Objects::nonNull)
+                .filter(time -> !time.equals(LocalDateTime.MIN))
                 .max(LocalDateTime::compareTo)
                 .orElse(LocalDateTime.MIN);
 
         Duration duration = subtaskIds.stream()
                 .map(subtasks::get)
                 .map(Task::getDuration)
-                .filter(Objects::nonNull)
                 .reduce(Duration.ofMinutes(0), Duration::plus);
 
         epic.setStartTime(startTime);
@@ -311,11 +313,9 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setDuration(duration);
     }
 
-    public boolean areTasksOverlapping(Task task1, Task task2) {
-        return (task1.getEndTime().isAfter(task2.getStartTime())
-                && task1.getEndTime().isBefore(task2.getEndTime())
-                || task2.getEndTime().isAfter(task1.getStartTime())
-                && task2.getEndTime().isBefore(task1.getEndTime()));
+    private boolean areTasksOverlapping(Task task1, Task task2) {
+        return !task1.getStartTime().isAfter(task2.getEndTime())
+                && !task2.getStartTime().isAfter(task1.getEndTime());
     }
 
     private boolean isTaskOverlapping(Task task) {

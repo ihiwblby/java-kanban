@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import utility.Status;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,9 +114,9 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic("Epic 1", "Epic description");
         taskManager.createEpic(epic);
 
-        Subtask subtask1 = new Subtask("Subtask 1", "Subtask description", epic.getId());
+        Subtask subtask1 = new Subtask("Subtask 1", "Subtask description", epic.getId(), Duration.ofMinutes(10), LocalDateTime.now());
         taskManager.createSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask 2", "Subtask description", epic.getId());
+        Subtask subtask2 = new Subtask("Subtask 2", "Subtask description", epic.getId(), Duration.ofMinutes(10), LocalDateTime.now().plusMinutes(20));
         taskManager.createSubtask(subtask2);
 
         subtask1.setStatus(Status.DONE);

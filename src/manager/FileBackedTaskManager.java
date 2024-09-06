@@ -46,8 +46,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                         }
                     });
 
-            getAllEpics().stream()
-                    .flatMap(epic -> getSubtasksByEpicId(epic.getId()).stream())
+            getAllSubtasks().stream()
                     .map(Subtask::toStringForFile)
                     .forEach(subtaskString -> {
                         try {
