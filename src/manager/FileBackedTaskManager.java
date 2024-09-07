@@ -7,11 +7,13 @@ import utility.Status;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private final File file;
-    public static final String TITLE = "id,type,name,status,description,epic \n";
+    public static final String TITLE = "id,type,name,status,description,epic,duration,startTime\n";
 
     public FileBackedTaskManager(File file) {
         if (file == null) {
@@ -24,17 +26,35 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
             writer.write(TITLE);
 
-            for (Task task : getAllTasks()) {
-                writer.write(task.toStringForFile() + "\n");
-            }
+            getAllTasks().stream()
+                    .map(Task::toStringForFile)
+                    .forEach(taskString -> {
+                        try {
+                            writer.write(taskString + "\n");
+                        } catch (IOException exp) {
+                            throw new ManagerSaveException("Ошибка при сохранении задачи");
+                        }
+                    });
 
-            for (Epic epic : getAllEpics()) {
-                writer.write(epic.toStringForFile() + "\n");
+            getAllEpics().stream()
+                    .map(Epic::toStringForFile)
+                    .forEach(epicString -> {
+                        try {
+                            writer.write(epicString + "\n");
+                        } catch (IOException exp) {
+                            throw new ManagerSaveException("Ошибка при сохранении эпика");
+                        }
+                    });
 
-                for (Subtask subtask : getSubtasksByEpicId(epic.getId())) {
-                    writer.write(subtask.toStringForFile() + "\n");
-                }
-            }
+            getAllSubtasks().stream()
+                    .map(Subtask::toStringForFile)
+                    .forEach(subtaskString -> {
+                        try {
+                            writer.write(subtaskString + "\n");
+                        } catch (IOException exp) {
+                            throw new ManagerSaveException("Ошибка при сохранении подзадачи");
+                        }
+                    });
 
         } catch (IOException exp) {
             throw new ManagerSaveException("Ошибка при сохранении данных в файл");
@@ -76,10 +96,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
 
         manager.idCounter = idCounter + 1;
+        manager.getAllEpics().forEach(manager::recalculateEpicTimeAndDuration);
         return manager;
     }
 
-    private Task fromString(String value) {
+    public Task fromString(String value) {
         if (value == null || value.isEmpty()) {
             throw new IllegalArgumentException("Переданная строка пустая или null.");
         }
@@ -90,11 +111,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         String name = element[2];
         Status status = Status.valueOf(element[3]);
         String description = element[4];
+        Duration duration = Duration.ofMinutes(Long.parseLong(element[6]));
+        LocalDateTime startTime = LocalDateTime.parse(element[7]);
 
         switch (taskType) {
             case "SUBTASK" -> {
                 int myEpicId = Integer.parseInt(element[5]);
-                Subtask subtask = new Subtask(name, description, myEpicId);
+                Subtask subtask = new Subtask(name, description, myEpicId, duration, startTime);
                 subtask.setId(id);
                 subtask.setStatus(status);
                 return subtask;
@@ -106,7 +129,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 return epic;
             }
             case "TASK" -> {
-                Task task = new Task(name, description);
+                Task task = new Task(name, description, duration, startTime);
                 task.setId(id);
                 task.setStatus(status);
                 return task;

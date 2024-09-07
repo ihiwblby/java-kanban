@@ -50,4 +50,6 @@ public interface TaskManager {
     void updateEpicStatus(int epicId);
 
     List<Task> getHistory();
+
+    List<Task> getPrioritizedTasks();
 }

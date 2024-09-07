@@ -1,3 +1,5 @@
+package manager_test;
+
 import manager.HistoryManager;
 import manager.Managers;
 import manager.TaskManager;
@@ -68,6 +70,21 @@ class InMemoryHistoryManagerTest {
         List<Task> history = historyManager.getHistory();
         Assertions.assertEquals(2, history.size(), "История должна содержать 2 задачи после удаления.");
         Assertions.assertEquals(task2, history.getFirst(), "Первой задачей после удаления должна быть Task 2.");
+    }
+
+    @Test
+    public void shouldRemoveTaskFromMiddleOfHistory() {
+        Task task1 = createAndAddTask("Task 1", "Description 1");
+        Task task2 = createAndAddTask("Task 2", "Description 2");
+        Task task3 = createAndAddTask("Task 3", "Description 3");
+
+        historyManager.remove(task2.getId());
+
+        List<Task> history = historyManager.getHistory();
+        Assertions.assertEquals(2, history.size(), "История должна содержать 2 задачи после удаления.");
+        Assertions.assertFalse(history.contains(task2), "История не должна содержать task2.");
+        Assertions.assertTrue(history.contains(task1), "История должна содержать task1.");
+        Assertions.assertTrue(history.contains(task3), "История должна содержать task3.");
     }
 
     @Test
@@ -143,4 +160,13 @@ class InMemoryHistoryManagerTest {
         Task lastViewedTask = historyManager.getHistory().getFirst();
         Assertions.assertEquals("updated name", lastViewedTask.getName(), "Задача в истории должна иметь обновленное имя.");
     }
+
+    @Test
+    public void shouldHandleEmptyHistory() {
+        List<Task> history = historyManager.getHistory();
+        Assertions.assertTrue(history.isEmpty(), "История должна быть пустой при инициализации.");
+    }
+
+
+
 }
