@@ -99,8 +99,9 @@ public class InMemoryTaskManager implements TaskManager {
             System.out.println("Задача пересекается по времени с другой задачей.");
             return;
         }
-        task.setId(idCounter++);
-        tasks.put(task.getId(), task);
+        idCounter++;
+        task.setId(idCounter);
+        tasks.put(idCounter, task);
         addTaskToPrioritized(task);
     }
 
@@ -110,7 +111,8 @@ public class InMemoryTaskManager implements TaskManager {
             System.out.println("Эпик с таким названием и описанием уже существует.");
             return;
         }
-        epic.setId(idCounter++);
+        idCounter++;
+        epic.setId(idCounter);
         epics.put(epic.getId(), epic);
     }
 
@@ -125,8 +127,9 @@ public class InMemoryTaskManager implements TaskManager {
             return;
         }
         if (epics.containsKey(subtask.getMyEpicId())) {
-            subtask.setId(idCounter++);
-            subtasks.put(subtask.getId(), subtask);
+            idCounter++;
+            subtask.setId(idCounter);
+            subtasks.put(idCounter, subtask);
             final Epic epic = epics.get(subtask.getMyEpicId());
             epic.addSubtaskId(subtask.getId());
             updateEpicStatus(epic.getId());
@@ -318,9 +321,9 @@ public class InMemoryTaskManager implements TaskManager {
                 && !task2.getStartTime().isAfter(task1.getEndTime());
     }
 
-    private boolean isTaskOverlapping(Task task) {
+    public boolean isTaskOverlapping(Task task) {
         return getPrioritizedTasks().stream()
-                .filter(existingTask -> !existingTask.equals(task))
+                .filter(existingTask -> existingTask.getId() != task.getId())
                 .anyMatch(existingTask -> areTasksOverlapping(task, existingTask));
     }
 }
