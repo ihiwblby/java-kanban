@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpServer;
 import manager.InMemoryTaskManager;
+import manager.TaskManager;
 import server.adapters.DurationAdapter;
 import server.adapters.LocalDateTimeAdapter;
 import server.adapters.StatusAdapter;
@@ -21,9 +22,9 @@ public class HttpTaskServer {
 
     private final HttpServer httpServer;
     private final Gson gson;
-    public InMemoryTaskManager taskManager;
+    private final TaskManager taskManager;
 
-    public HttpTaskServer(InMemoryTaskManager taskManager) throws IOException {
+    public HttpTaskServer(TaskManager taskManager) throws IOException {
         this.taskManager = taskManager;
         gson = getGson();
         httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -54,7 +55,7 @@ public class HttpTaskServer {
     }
 
     public static void main(String[] args) throws IOException {
-        InMemoryTaskManager taskManager = new InMemoryTaskManager();
+        TaskManager taskManager = new InMemoryTaskManager();
         HttpTaskServer httpTaskServer = new HttpTaskServer(taskManager);
         httpTaskServer.start();
     }

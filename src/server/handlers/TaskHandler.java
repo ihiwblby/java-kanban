@@ -3,7 +3,9 @@ package server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import manager.InMemoryTaskManager;
+import exceptions.NotFoundException;
+import exceptions.OverlappingException;
+import manager.TaskManager;
 import model.Task;
 
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.Optional;
 
 public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
-    public TaskHandler(InMemoryTaskManager taskManager, Gson gson) {
+    public TaskHandler(TaskManager taskManager, Gson gson) {
         super(taskManager, gson);
     }
 
@@ -46,7 +48,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                     } else if (path.startsWith("/tasks")) {
                         Optional<Integer> id = getId(path);
                         if (id.isPresent()) {
-                            handleUpdateTask(exchange, id.get());
+                            handleUpdateTask(exchange);
                         } else {
                             sendIncorrectId(exchange);
                         }
@@ -76,7 +78,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
                 }
             }
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         } finally {
             exchange.close();
         }
@@ -84,37 +86,31 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleDeleteTask(HttpExchange exchange, int taskId) throws IOException {
         try {
-            if (taskManager.getTaskById(taskId) == null) {
-                sendNotFound(exchange, "Задача с ID " + taskId + " не найдена");
-            } else {
-                taskManager.removeTaskById(taskId);
-                sendText(exchange, "Задача с ID " + taskId + " удалена", 200);
-            }
+            taskManager.removeTaskById(taskId);
+            sendText(exchange, "Задача с ID " + taskId + " удалена", 200);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
-    private void handleUpdateTask(HttpExchange exchange, int taskId) throws IOException {
-        if (taskManager.getTaskById(taskId) == null) {
-            sendNotFound(exchange, "Задача с ID " + taskId + " не найдена");
-        } else {
-            try (InputStream inputStream = exchange.getRequestBody()) {
-                String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
-                if (body.isEmpty()) {
-                    sendNotFound(exchange, "Не передана задача для обновления.");
-                } else {
-                    Task task = gson.fromJson(body, Task.class);
-                    if (taskManager.isTaskOverlapping(task)) {
-                        sendHasInteractions(exchange);
-                    } else {
-                        taskManager.updateTask(task);
-                        sendText(exchange, "Задача успешно обновлена", 201);
-                    }
-                }
-            } catch (Exception exp) {
-                sendServerError(exchange);
+    private void handleUpdateTask(HttpExchange exchange) throws IOException {
+        try (InputStream inputStream = exchange.getRequestBody()) {
+            String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
+            if (body.isEmpty()) {
+                sendNotFound(exchange, "Не передана задача для обновления.");
+                return;
             }
+            Task task = gson.fromJson(body, Task.class);
+            taskManager.updateTask(task);
+            sendText(exchange, "Задача успешно обновлена", 201);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
+        } catch (OverlappingException exp) {
+            sendHasInteractions(exchange, exp.getMessage());
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
@@ -123,17 +119,15 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
             if (body.isEmpty()) {
                 sendNotFound(exchange, "Не передана задача для добавления.");
-            } else {
-                Task task = gson.fromJson(body, Task.class);
-                if (taskManager.isTaskOverlapping(task)) {
-                    sendHasInteractions(exchange);
-                } else {
-                    taskManager.createTask(task);
-                    sendText(exchange, "Задача успешно добавлена", 201);
-                }
+                return;
             }
+            Task task = gson.fromJson(body, Task.class);
+            taskManager.createTask(task);
+            sendText(exchange, "Задача успешно добавлена", 201);
+        } catch (OverlappingException exp) {
+            sendHasInteractions(exchange, exp.getMessage());
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
@@ -144,21 +138,19 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
             } else {
                 sendText(exchange, gson.toJson(taskManager.getAllTasks()), 200);
             }
-        } catch (Exception e) {
-            sendServerError(exchange);
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
     private void handleGetTaskById(HttpExchange exchange, int id) throws IOException {
         try {
             Task task = taskManager.getTaskById(id);
-            if (task == null) {
-                sendNotFound(exchange, "Задача с ID " + id + " не найдена");
-            } else {
-                sendText(exchange, gson.toJson(task), 200);
-            }
-        } catch (Exception e) {
-            sendServerError(exchange);
+            sendText(exchange, gson.toJson(task), 200);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 }

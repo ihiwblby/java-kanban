@@ -2,7 +2,7 @@ package server.handlers;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import manager.InMemoryTaskManager;
+import manager.TaskManager;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -10,11 +10,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class BaseHttpHandler {
-    protected InMemoryTaskManager taskManager;
+    protected TaskManager taskManager;
     protected Gson gson;
     protected static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-    public BaseHttpHandler(InMemoryTaskManager taskManager, Gson gson) {
+    public BaseHttpHandler(TaskManager taskManager, Gson gson) {
         this.taskManager = taskManager;
         this.gson = gson;
     }
@@ -30,9 +30,8 @@ public class BaseHttpHandler {
         sendResponse(exchange, text, 404);
     }
 
-    protected void sendHasInteractions(HttpExchange exchange) throws IOException {
-        String responseString = "Задача пересекается по времени с уже существующими задачами.";
-        sendResponse(exchange, responseString, 406);
+    protected void sendHasInteractions(HttpExchange exchange, String text) throws IOException {
+        sendResponse(exchange, text, 406);
     }
 
     protected void sendIncorrectMethod(HttpExchange exchange, String method) throws IOException {
@@ -50,8 +49,8 @@ public class BaseHttpHandler {
         sendResponse(exchange, responseString, 400);
     }
 
-    protected void sendServerError(HttpExchange exchange) throws IOException {
-        String responseString = "Произошла ошибка при обработке запроса.";
+    protected void sendServerError(HttpExchange exchange, String message) throws IOException {
+        String responseString = "Произошла ошибка при обработке запроса: " + message;
         sendResponse(exchange, responseString, 500);
     }
 

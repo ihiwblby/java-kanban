@@ -3,13 +3,13 @@ package server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import manager.InMemoryTaskManager;
+import manager.TaskManager;
 
 import java.io.IOException;
 
 public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
 
-    public PrioritizedHandler(InMemoryTaskManager taskManager, Gson gson) {
+    public PrioritizedHandler(TaskManager taskManager, Gson gson) {
         super(taskManager, gson);
     }
 
@@ -29,7 +29,7 @@ public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
                 sendIncorrectMethod(exchange, method);
             }
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         } finally {
             exchange.close();
         }
@@ -42,8 +42,8 @@ public class PrioritizedHandler extends BaseHttpHandler implements HttpHandler {
             } else {
                 sendText(exchange, gson.toJson(taskManager.getPrioritizedTasks()), 200);
             }
-        } catch (Exception e) {
-            sendServerError(exchange);
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 }

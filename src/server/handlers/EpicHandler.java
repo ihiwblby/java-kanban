@@ -3,7 +3,9 @@ package server.handlers;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import manager.InMemoryTaskManager;
+import exceptions.NotFoundException;
+import exceptions.OverlappingException;
+import manager.TaskManager;
 import model.Epic;
 
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.Optional;
 
 public class EpicHandler extends BaseHttpHandler implements HttpHandler {
 
-    public EpicHandler(InMemoryTaskManager taskManager, Gson gson) {
+    public EpicHandler(TaskManager taskManager, Gson gson) {
         super(taskManager, gson);
     }
 
@@ -53,7 +55,7 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                     } else if (path.startsWith("/epics")) {
                         Optional<Integer> id = getId(path);
                         if (id.isPresent()) {
-                            handleUpdateEpic(exchange, id.get());
+                            handleUpdateEpic(exchange);
                         } else {
                             sendIncorrectId(exchange);
                         }
@@ -83,7 +85,7 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
                 }
             }
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         } finally {
             exchange.close();
         }
@@ -91,37 +93,31 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
 
     private void handleDeleteEpic(HttpExchange exchange, int id) throws IOException {
         try {
-            if (taskManager.getEpicById(id) == null) {
-                sendNotFound(exchange, "Эпик с ID " + id + " не найден");
-            } else {
-                taskManager.removeEpicById(id);
-                sendText(exchange, "Эпик с ID " + id + " удалён", 200);
-            }
+            taskManager.removeEpicById(id);
+            sendText(exchange, "Эпик с ID " + id + " удалён", 200);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
-    private void handleUpdateEpic(HttpExchange exchange, int id) throws IOException {
-        if (taskManager.getEpicById(id) == null) {
-            sendNotFound(exchange, "Эпик с ID " + id + " не найден");
-        } else {
-            try (InputStream inputStream = exchange.getRequestBody()) {
-                String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
-                if (body.isEmpty()) {
-                    sendNotFound(exchange, "Не передан эпик для обновления.");
-                } else {
-                    Epic epic = gson.fromJson(body, Epic.class);
-                    if (taskManager.isTaskOverlapping(epic)) {
-                        sendHasInteractions(exchange);
-                    } else {
-                        taskManager.updateEpic(epic);
-                        sendText(exchange, "Эпик успешно обновлён", 201);
-                    }
-                }
-            } catch (Exception exp) {
-                sendServerError(exchange);
+    private void handleUpdateEpic(HttpExchange exchange) throws IOException {
+        try (InputStream inputStream = exchange.getRequestBody()) {
+            String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
+            if (body.isEmpty()) {
+                sendNotFound(exchange, "Не передан эпик для обновления.");
+                return;
             }
+            Epic epic = gson.fromJson(body, Epic.class);
+            taskManager.updateEpic(epic);
+            sendText(exchange, "Эпик успешно обновлён", 201);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
+        } catch (OverlappingException exp) {
+            sendHasInteractions(exchange, exp.getMessage());
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
@@ -130,17 +126,15 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
             String body = new String(inputStream.readAllBytes(), DEFAULT_CHARSET);
             if (body.isEmpty()) {
                 sendNotFound(exchange, "Не передан эпик для добавления.");
-            } else {
-                Epic epic = gson.fromJson(body, Epic.class);
-                if (taskManager.isTaskOverlapping(epic)) {
-                    sendHasInteractions(exchange);
-                } else {
-                    taskManager.createEpic(epic);
-                    sendText(exchange, "Эпик успешно добавлен", 201);
-                }
+                return;
             }
+            Epic epic = gson.fromJson(body, Epic.class);
+            taskManager.createEpic(epic);
+            sendText(exchange, "Эпик успешно добавлен", 201);
+        } catch (OverlappingException exp) {
+            sendHasInteractions(exchange, exp.getMessage());
         } catch (Exception exp) {
-            sendServerError(exchange);
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
@@ -151,34 +145,29 @@ public class EpicHandler extends BaseHttpHandler implements HttpHandler {
             } else {
                 sendText(exchange, gson.toJson(taskManager.getAllEpics()), 200);
             }
-        } catch (Exception e) {
-            sendServerError(exchange);
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
     private void handleGetEpicById(HttpExchange exchange, int id) throws IOException {
         try {
             Epic epic = taskManager.getEpicById(id);
-            if (epic == null) {
-                sendNotFound(exchange, "Эпик с ID " + id + " не найден");
-            } else {
-                sendText(exchange, gson.toJson(epic), 200);
-            }
-        } catch (Exception e) {
-            sendServerError(exchange);
+            sendText(exchange, gson.toJson(epic), 200);
+        } catch (NotFoundException exp) {
+            sendNotFound(exchange, exp.getMessage());
+        } catch (Exception exp) {
+            sendServerError(exchange, exp.getMessage());
         }
     }
 
     private void handleGetEpicSubtasks(HttpExchange exchange, int id) throws IOException {
         try {
-            Epic epic = taskManager.getEpicById(id);
-            if (epic == null) {
-                sendNotFound(exchange, "Эпик с ID " + id + " не найден");
-            } else {
-                sendText(exchange, gson.toJson(taskManager.getSubtasksByEpicId(id)), 200);
-            }
+            sendText(exchange, gson.toJson(taskManager.getSubtasksByEpicId(id)), 200);
+        } catch (NotFoundException e) {
+            sendNotFound(exchange, e.getMessage());
         } catch (Exception e) {
-            sendServerError(exchange);
+            sendServerError(exchange, e.getMessage());
         }
     }
 }
