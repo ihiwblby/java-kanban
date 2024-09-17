@@ -1,5 +1,6 @@
 package manager_test;
 
+import exceptions.NotFoundException;
 import manager.InMemoryTaskManager;
 import manager.Managers;
 import manager.TaskManager;
@@ -171,7 +172,7 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.removeSubtaskById(subtask.getId());
 
-        Assertions.assertNull(taskManager.getSubtaskById(subtask.getId()), "Подзадача не должна существовать после удаления.");
+        Assertions.assertThrows(NotFoundException.class, () -> taskManager.getSubtaskById(subtask.getId()));
     }
 
     @Test
